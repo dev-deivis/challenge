@@ -1,0 +1,28 @@
+# Env
+.env
+.env.local
+.env.*.local
+
+# Deps
+node_modules/
+*/node_modules/
+
+# Build
+dist/
+build/
+.next/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.dockerignore
