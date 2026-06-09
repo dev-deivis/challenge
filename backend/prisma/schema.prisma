@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  collections Collection[]
+  savedImages  SavedImage[]
+
+  @@map("users")
+}
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  coverImage  String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  items CollectionItem[]
+
+  @@map("collections")
+}
+
+// Imagen de NASA cacheada localmente para no re-consultar la API
+model NasaImage {
+  id          String   @id @default(cuid())
+  nasaId      String   @unique  // ID único de NASA (e.g. "PIA12345" o combo rover+sol+camera)
+  title       String
+  description String?
+  imageUrl    String
+  thumbUrl    String?
+  date        DateTime
+  source      NasaSource
+  rover       String?          // Curiosity, Opportunity, Spirit, Perseverance
+  camera      String?          // FHAZ, RHAZ, MAST, CHEMCAM, etc.
+  sol         Int?             // Sol marciano
+  earthDate   String?
+  mission     String?          // Mars Rover, Hubble, APOD, etc.
+  rawMetadata Json?            // Metadata original de NASA por si se necesita
+  createdAt   DateTime         @default(now())
+
+  // Enriquecimiento por IA
+  aiDescription   String?
+  aiCuriousFacts  String?      // JSON array de datos curiosos
+  aiAnalysis      String?      // Análisis técnico de la imagen
+  aiEnrichedAt    DateTime?
+
+  collectionItems CollectionItem[]
+  savedImages     SavedImage[]
+  tags            ImageTag[]
+
+  @@index([date])
+  @@index([rover])
+  @@index([source])
+  @@map("nasa_images")
+}
+
+enum NasaSource {
+  MARS_ROVER
+  APOD
+  NASA_LIBRARY
+}
+
+model CollectionItem {
+  id        String   @id @default(cuid())
+  notes     String?  // Nota personal del usuario sobre esta imagen en esta colección
+  addedAt   DateTime @default(now())
+
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  imageId String
+  image   NasaImage @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, imageId])
+  @@map("collection_items")
+}
+
+// Guardado rápido de imágenes (sin colección específica, como bookmarks)
+model SavedImage {
+  id      String   @id @default(cuid())
+  savedAt DateTime @default(now())
+
+  userId  String
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageId String
+  image   NasaImage @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, imageId])
+  @@map("saved_images")
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  images ImageTag[]
+
+  @@map("tags")
+}
+
+model ImageTag {
+  imageId   String
+  tagId     String
+  source    TagSource @default(MANUAL)  // MANUAL o AI_SUGGESTED
+  createdAt DateTime  @default(now())
+
+  image NasaImage @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  tag   Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([imageId, tagId])
+  @@map("image_tags")
+}
+
+enum TagSource {
+  MANUAL
+  AI_SUGGESTED
+}
