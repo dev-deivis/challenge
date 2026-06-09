@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Download, Trash2 } from "lucide-react";
 import { collectionsApi } from "../services/api";
+import { useAuthStore } from "../store/auth.store";
 import ImageCard from "../components/ImageCard";
 import EmptyState from "../components/EmptyState";
 
 export default function CollectionDetailPage() {
   const { id } = useParams();
+  const token = useAuthStore((s) => s.token);
   const [collection, setCollection] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -30,7 +32,7 @@ export default function CollectionDetailPage() {
     setExporting(true);
     try {
       const res = await fetch(`/api/v1/collections/${id}/export/pdf`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("mindshore-auth")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

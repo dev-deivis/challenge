@@ -49,7 +49,13 @@ Responde en JSON con exactamente estas claves:
     return JSON.parse(response.choices[0].message.content);
   } catch (err) {
     logger.error("Error al enriquecer imagen con IA:", err.message);
-    throw err;
+    // Fallback gracioso: devuelve descripción original sin lanzar error
+    return {
+      description: image.description || image.title,
+      curiousFacts: [],
+      tags: [],
+      analysis: null,
+    };
   }
 }
 

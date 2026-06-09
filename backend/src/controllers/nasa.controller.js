@@ -3,8 +3,8 @@ const nasaService = require("../services/nasa.service");
 
 async function searchRoverPhotos(req, res, next) {
   try {
-    const { rover = "curiosity", sol, earth_date, camera, page } = req.query;
-    const photos = await nasaService.getMarsRoverPhotos({ rover, sol, earth_date, camera, page });
+    const { rover = "curiosity", earth_date, camera, page } = req.query;
+    const photos = await nasaService.getMarsRoverPhotos({ rover, earth_date, camera, page });
     res.json({ photos, total: photos.length });
   } catch (err) {
     next(err);

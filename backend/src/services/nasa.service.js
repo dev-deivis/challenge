@@ -3,27 +3,38 @@ const axios = require("axios");
 const NASA_BASE = "https://api.nasa.gov";
 const API_KEY = () => process.env.NASA_API_KEY || "DEMO_KEY";
 
-// Mars Rover Photos
-async function getMarsRoverPhotos({ rover = "curiosity", sol, earth_date, camera, page = 1 }) {
-  const params = { api_key: API_KEY(), page };
-  if (sol) params.sol = sol;
-  if (earth_date) params.earth_date = earth_date;
-  if (camera) params.camera = camera;
+// Mars Rover Photos — usa NASA Image Library (el endpoint mars-photos fue retirado de Heroku)
+async function getMarsRoverPhotos({ rover = "curiosity", earth_date, camera, page = 1 }) {
+  let query = `${rover} rover`;
+  if (camera) query += ` ${camera} camera`;
+  if (earth_date) query += ` ${earth_date}`;
 
-  const { data } = await axios.get(
-    `${NASA_BASE}/mars-photos/api/v1/rovers/${rover}/photos`,
-    { params }
-  );
-  return data.photos;
+  const params = { q: query, media_type: "image", page };
+  const { data } = await axios.get("https://images-api.nasa.gov/search", { params });
+
+  // Normalizar al formato que espera el frontend
+  const items = (data.collection?.items || []).map((item) => {
+    const meta = item.data?.[0] || {};
+    const links = item.links || [];
+    return {
+      id: meta.nasa_id || item.href,
+      nasaId: meta.nasa_id,
+      title: meta.title,
+      description: meta.description,
+      earth_date: meta.date_created?.split("T")[0],
+      img_src: links.find((l) => l.rel === "preview")?.href || links[0]?.href,
+      rover: { name: rover.charAt(0).toUpperCase() + rover.slice(1) },
+      camera: { name: camera || "N/A", full_name: meta.title },
+      source: "NASA_LIBRARY",
+    };
+  });
+
+  return items;
 }
 
-// Manifest del rover (info de misión y sols disponibles)
+// Stub: el manifest API también fue retirado
 async function getRoverManifest(rover = "curiosity") {
-  const { data } = await axios.get(
-    `${NASA_BASE}/mars-photos/api/v1/manifests/${rover}`,
-    { params: { api_key: API_KEY() } }
-  );
-  return data.photo_manifest;
+  return { name: rover, status: "active", total_photos: "N/A" };
 }
 
 // APOD - Astronomy Picture of the Day

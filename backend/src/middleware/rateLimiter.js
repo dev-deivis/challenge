@@ -12,7 +12,7 @@ const apiLimiter = rateLimit({
 // Límite específico para llamadas a APIs externas (NASA + OpenAI)
 const externalApiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minuto
-  max: 20,
+  max: process.env.NODE_ENV === "production" ? 20 : 200,
   message: { error: "Límite de consultas externas alcanzado. Esperá un momento." },
   standardHeaders: true,
   legacyHeaders: false,
