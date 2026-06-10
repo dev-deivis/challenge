@@ -4,6 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
+        violet: {
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7C3AED",
+          700: "#6D28D9",
+          800: "#5b21b6",
+        },
         space: {
           50: "#f0f4ff",
           100: "#e0e9ff",
